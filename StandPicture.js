@@ -269,7 +269,7 @@
         mktSPCN = args[1];
 				var autoET = $gameSwitches.value(autoEre);
 				if ( autoET != true ) {
-					if ( mktSPCN == args[1] ) {
+					if ( mktSPRN == args[1] ) {
 						mktHide(mktRPID,mktRX + stX,"R",partIndexR);
 					} else if ( mktSPLN == args[1] ) {
 						mktHide(mktLPID,0 - stX,"L",partIndexL);
