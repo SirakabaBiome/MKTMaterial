@@ -2,7 +2,7 @@
 //  StandPicture.js
 // ======================
 /*:ja
- * @plugindesc 立ち絵の表示を楽にします[v0.5]
+ * @plugindesc 立ち絵の表示を楽にします[v0.5.1]
  * @author 白樺まこと
  *
  * @help
@@ -15,13 +15,16 @@
  *　プラグインコマンド等説明は配布ページを参照してください。
  *　https://diary.sirakababiome.com/2020/02/mvStand.html
  *
+ * 更新履歴
+ * 動きを選択できるようにした
+ *
  * 規約
  * 白樺まことの表記をわかりやすいどこかに残しておけば再配布・改変に制限はありません。商用利用も可能です。
  * ただし、作者を偽ったりこのプラグイン単体で販売するのは禁止します。
  * また、クレジットに「白樺まこと」を記述していただけると幸いです。
  *
  * 連絡先
- * Twitter @maou_2chica
+ * Twitter maou_2chica
  *
  * @param FileNameAndCharacterName
  * @desc キャラクター名とピクチャ名を結びつけます
@@ -77,6 +80,72 @@
  * @desc 自動で消す機能のON/OFFを管理するスイッチです。ONで自動で消す機能がOFFになります。
  * @type switch
  * @default 0
+ *
+ * @param easing
+ * @desc 動きのオプション。詳しくはEasingPicture.js(くらむぼん様)を読んでください。
+ * @type select
+ *
+ * @option linear
+ * @value linear
+ *
+ * @option easeInQuad
+ * @value easeInQuad
+ *
+ * @option easeOutQuad
+ * @value easeOutQuad
+ *
+ * @option easeInOutQuad
+ * @value easeInOutQuad
+ *
+ * @option easeInCubic
+ * @value easeInCubic
+ *
+ * @option easeOutCubic
+ * @value easeOutCubic
+ *
+ * @option easeInOutCubic
+ * @value easeInOutCubic
+ *
+ * @option easeInQuart
+ * @value easeInQuart
+ *
+ * @option easeOutQuart
+ * @value easeOutQuart
+ *
+ * @option easeInOutCirc
+ * @value easeInOutCirc
+ *
+ * @option easeInElastic
+ * @value easeInElastic
+ *
+ * @option easeOutElastic
+ * @value easeOutElastic
+ *
+ * @option easeInOutElastic
+ * @value easeInOutElastic
+ *
+ * @option easeInBack
+ * @value easeInBack
+ *
+ * @option easeOutBack
+ * @value easeOutBack
+ *
+ * @option easeInOutBack
+ * @value easeInOutBack
+ *
+ * @option easeInBounce
+ * @value easeInBounce
+ *
+ * @option easeOutBounce
+ * @value easeOutBounce
+ *
+ * @option easeOutBounce
+ * @value easeOutBounce
+ *
+ * @option easeInOutBounce
+ * @value easeInOutBounce
+ *
+ * @default easeOutBack
  */
 
  /*~struct~mktSPIDName:
@@ -189,6 +258,7 @@
 	var partIndexL = 0;
 	var partIndexR = 0;
 	var partIndexC = 0;
+	var partIndex = 0;
 	var mktFolder = 0;
 	var paramBSP = 0;
 	var paramB = 0;
@@ -207,6 +277,8 @@
 	var partBlinkSetC = 0;
 	var costume = 0;
 	var textS = Number(parameters.textXS);
+	var mktease = [String(parameters.easing)];
+	var linear = ['linear'];
 
 //プラグインコマンド
   var _Game_Interpreter_prototype_pluginCommand = Game_Interpreter.prototype.pluginCommand;
@@ -360,13 +432,16 @@
 					var mktPID = 0;
 					var mktPIX = 0;
 						if ( args[1] == 'L' ) {
+							partIndex = partIndexL;
 							mktPID = mktLPID;
 							mktPIX = 0;
 						} else if ( args[1] == 'R' ) {
+							partIndex = partIndexR;
 							mktPID = mktRPID;
 							mktPIX = mktRX;
 							mktSPRCN = 0;
 						} else if ( args[1] == 'C' ) {
+							partIndex = partIndexC;
 							mktPID = mktCPID;
 							mktPIX = mktCX;
 						}
@@ -388,25 +463,19 @@
 //立ち絵の消去
 
 function mktHide(mktPictureID,x,pos,partIndex){
+	Game_Interpreter.prototype.pluginCommand('easing',mktease);
 	$gameScreen.movePicture(mktPictureID,0,x,0,100,100,0,0,60);
 	if ( partIndex == 'true' ) {
 		$gameScreen.movePicture(mktPictureID + 1,0,x,0,100,100,0,0,60);
 		$gameScreen.movePicture(mktPictureID + 2,0,x,0,100,100,0,0,60);
 	}
-	var mktSPW = setInterval(mktStundPictureErasePer, 60);
-	function mktStundPictureErasePer(){
+	var mktStundPictureErasePer = function(partIndex,pos,mktPictureID){
+		console.log( "消してる" );
 		$gameScreen.erasePicture(mktPictureID);
-		if ( partIndex == 'true' ) {
-			var standPLip = ['PA_STOP_FORCE',mktPictureID + 2];
-			var standPLipS = standPLip.join( ' ' );
-			var standPEye = ['PA_STOP_FORCE',mktPictureID + 1];
-			var standPEyes = standPLip.join( ' ' );
-			CallPluginCommand( standPEyes );
-			CallPluginCommand( standPLipS );
-			$gameScreen.erasePicture(mktPictureID + 1);
-			$gameScreen.erasePicture(mktPictureID + 2);
+		$gameScreen.erasePicture(mktPictureID + 1);
+		$gameScreen.erasePicture(mktPictureID + 2);
+		if ( partIndex != 'false' ) {
 			if (pos == "L") {
-				console.log( "消す１" );
 				clearInterval(partBlinkSetL);
 			}
 			if ( pos == "R") {
@@ -417,8 +486,8 @@ function mktHide(mktPictureID,x,pos,partIndex){
 			}
 		}
 	}
+	setTimeout(mktStundPictureErasePer, 500,partIndex,pos,mktPictureID);
 	if (pos == "L") {
-		console.log( "消す１" );
 		mktSPLN = -1;
 		mktSPLCN = -1;
 	}
@@ -430,7 +499,7 @@ function mktHide(mktPictureID,x,pos,partIndex){
 		mktSPCN = -1;
 		mktSPCCN = -1;
 	}
-	clearInterval( mktSPW );
+	Game_Interpreter.prototype.pluginCommand('easing',linear);
 }
 
 //ピクチャの表示
@@ -475,9 +544,8 @@ function mktHide(mktPictureID,x,pos,partIndex){
 		}
 		if ( paramL != false ) {
 			if ( paratL > 0 ) {
-    		var standPLip = ['PA_INIT',String(partLS),String(paramL),'H','0'];
-				var standPLipS = standPLip.join( ' ' );
-				CallPluginCommand(standPLipS);
+    		var standPLip = [String(partLS),String(paramL),'H','0'];
+				Game_Interpreter.prototype.pluginCommand('PA_INIT',standPLip);
 	  		$gameScreen.showPicture(pictureID3, pictureName + '_' + indexL + '_Lip', 0, startX, y, 100,100,100,startOpa,startOpa);
 			} else {
 	  		$gameScreen.showPicture(pictureID3, pictureName + '_' + indexL + '_Lip', 0, startX, y, 100,100,100,startOpa,startOpa);
@@ -485,9 +553,8 @@ function mktHide(mktPictureID,x,pos,partIndex){
 		}
 		if ( paramB != false ) {
 			if ( paratB > 0) {
-    		var standPBlink = ['PA_INIT',String(partBS),String(paramB),'横','0'];
-				var standPBlinks = standPBlink.join( ' ' );
-				CallPluginCommand(standPBlinks);
+    		var standPBlink = [String(partBS),String(paramB),'横','0'];
+				Game_Interpreter.prototype.pluginCommand('PA_INIT',standPBlink);
 	  		$gameScreen.showPicture(pictureID2, pictureName + '_' + index + '_Blink', 0, startX, y, 100,100,100,startOpa,startOpa);
 				if ( paramLLR == 1 ) {
 				partBlinkSetL = setInterval(mktLBlink,paramBSP);
@@ -515,24 +582,24 @@ function mktHide(mktPictureID,x,pos,partIndex){
 		} else {
 	  	$gameScreen.showPicture(pictureID, fileName + '_' + index, 0, startX, y, 100,100,100,startOpa,startOpa);
 		}
-    CallPluginCommand('easing easeOutBack');
+    Game_Interpreter.prototype.pluginCommand('easing',mktease);
     $gameScreen.movePicture(pictureID,0,x,y,100,100,255,0,60);
 		if ( partIndex == 'true' ) {
-	    CallPluginCommand('easing easeOutBack');
+	    Game_Interpreter.prototype.pluginCommand('easing',mktease);
 	    $gameScreen.movePicture(pictureID2,0,x,y,100,100,255,0,60);
 			if ( paramL != false ) {
-		    CallPluginCommand('easing easeOutBack');
+		    Game_Interpreter.prototype.pluginCommand('easing',mktease);
 		    $gameScreen.movePicture(pictureID3,0,x,y,100,100,255,0,60);
 			}
 		}
-	  CallPluginCommand('linear');
+	  Game_Interpreter.prototype.pluginCommand('easing',linear);
   }
 
 //動きの設定
 	function mktMovePicture(pictureID,x,y,moveType,wait,count,ID){
 		switch ( moveType ) {
 			case 'Jump':
-			CallPluginCommand('easing easeOutBack');
+			Game_Interpreter.prototype.pluginCommand('easing',mktease);
 			var mktJumpC = 0;
 			var mktJumpP = setInterval(mktJump, wait);
 				function mktJump(){
@@ -560,11 +627,11 @@ function mktHide(mktPictureID,x,pos,partIndex){
 						}
 					}
 				}
-			  CallPluginCommand('linear');
+			  Game_Interpreter.prototype.pluginCommand('easing',linear);
 				break;
 
 			case 'Shake':
-		  CallPluginCommand('easing easeOutBack');
+		  Game_Interpreter.prototype.pluginCommand('easing',mktease);
 			var mktShakeC = 0;
 			var mktShakeP = setInterval(mktShake, wait);
 				function mktShake(){
@@ -592,7 +659,7 @@ function mktHide(mktPictureID,x,pos,partIndex){
 						}
 					}
 				}
-			  CallPluginCommand('linear');
+			  Game_Interpreter.prototype.pluginCommand('easing',linear);
 				break;
 
 				case 'Custom':
@@ -629,8 +696,8 @@ function mktHide(mktPictureID,x,pos,partIndex){
 							}
 						}
 					}
-				  CallPluginCommand('easing easeOutBack');
-				  CallPluginCommand('linear');
+				  Game_Interpreter.prototype.pluginCommand('easing',mktease);
+				  Game_Interpreter.prototype.pluginCommand('easing',linear);
 					break;
 
 			}
@@ -639,8 +706,8 @@ function mktHide(mktPictureID,x,pos,partIndex){
 		var _Game_Message_add = Game_Message.prototype.add;
 
 		Game_Message.prototype.add = function(text) {
+			_Game_Message_add.call(this,text);
 			mktSPM(text);
-	    _Game_Message_add.call(this,text);
 		};
 
 		function mktSPM(text){
@@ -756,49 +823,43 @@ function mktHide(mktPictureID,x,pos,partIndex){
 		}
 
 		function mktLipL() {
-			var standPLLip = ['PA_START_LOOP',String(mktLPID + 2),'1'];
-			var standPLLipSet = standPLLip.join( ' ' );
+			var standPLLip = [String(mktLPID + 2),'1'];
 			var standPLLipEnd = setInterval(standLLipEnd,textS);
 			var endCountL = 0;
-			CallPluginCommand(standPLLipSet);
+			Game_Interpreter.prototype.pluginCommand('PA_START_LOOP',standPLLip);
 			function standLLipEnd(){
 				endCountL++;
 				if (endCountL => 1) {
-					var standPLLEnd = ['PA_STOP',String(mktLPID + 2)];
-					var standPLLEndSet = standPLLEnd.join( ' ' );
-					CallPluginCommand(standPLLEndSet);
+					var standPLLEnd = [String(mktLPID + 2)];
+					Game_Interpreter.prototype.pluginCommand('PA_STOP',standPLLEnd);
 					clearInterval(standPLLipEnd);
 				}
 			}
 		}
 		function mktLipR() {
-			var standPRLip = ['PA_START_LOOP',String(mktRPID + 2),'1'];
-			var standPRLipSet = standPRLip.join( ' ' );
+			var standPRLip = [String(mktRPID + 2),'1'];
 			var standPRLipEnd = setInterval(standRLipEnd,textS);
 			var endCountR = 0;
-			CallPluginCommand(standPRLipSet);
+			Game_Interpreter.prototype.pluginCommand('PA_START_LOOP',standPRLip);
 			function standRLipEnd(){
 				endCountR++;
 				if (endCountR => 1) {
-					var standPRLEnd = ['PA_STOP',String(mktRPID + 2)];
-					var standPRLEndSet = standPRLEnd.join( ' ' );
-					CallPluginCommand(standPRLEndSet);
+					var standPRLEnd = [String(mktRPID + 2)];
+					Game_Interpreter.prototype.pluginCommand('PA_STOP',standPRLEnd);
 					clearInterval(standPRLipEnd);
 				}
 			}
 		}
 		function mktLipC() {
-			var standPCLip = ['PA_START_LOOP',String(mktCPID + 2),'1'];
-			var standPCLipSet = standPCLip.join( ' ' );
+			var standPCLip = [String(mktCPID + 2),'1'];
 			var standPCLipEnd = setInterval(standCLipEnd,textS);
 			var endCountC = 0;
-			CallPluginCommand(standPCLipSet);
+			Game_Interpreter.prototype.pluginCommand('PA_START_LOOP',standPCLip);
 			function standCLipEnd(){
 				endCountC++;
 				if (endCountC => 1) {
-					var standPCLEnd = ['PA_STOP',String(mktCPID + 2)];
-					var standPCLEndSet = standPCLEnd.join( ' ' );
-					CallPluginCommand(standPCLEndSet);
+					var standPCLEnd = [String(mktCPID + 2)];
+					Game_Interpreter.prototype.pluginCommand('PA_STOP',standPCLEnd);
 					clearInterval(standPCLipEnd);
 				}
 			}
@@ -809,10 +870,9 @@ function mktHide(mktPictureID,x,pos,partIndex){
 
 			if (randomBlinkL == 0) {
 
-				var standPLBlinks = ['PA_START',String(mktLPID + 1),'2'];
-				var standPLBlinkSet = standPLBlinks.join( ' ' );
+				var standPLBlinks = [String(mktLPID + 1),'2'];
 
-				CallPluginCommand(standPLBlinkSet);
+				Game_Interpreter.prototype.pluginCommand('PA_START',standPLBlinks);
 
 			}
 		}
@@ -821,10 +881,9 @@ function mktHide(mktPictureID,x,pos,partIndex){
 
 			if (randomBlinkR == 0) {
 
-	    	var standPRBlinks = ['PA_START',String(mktRPID + 1),'2'];
-		    var standPRBlinkSet = standPRBlinks.join( ' ' );
+	    	var standPRBlinks = [String(mktRPID + 1),'2'];
 
-				CallPluginCommand(standPRBlinkSet);
+				Game_Interpreter.prototype.pluginCommand('PA_START',standPRBlinks);
 
 			}
 
@@ -834,12 +893,14 @@ function mktHide(mktPictureID,x,pos,partIndex){
 
 			if (randomBlinkC == 0) {
 
-				var standPCBlinks = ['PA_START',String(mktCPID + 1),'2'];
-				var standPCBlinkSet = standPCBlinks.join( ' ' );
+				var standPCBlinks = [String(mktCPID + 1),'2'];
 
-				CallPluginCommand(standPCBlinkSet);
+				Game_Interpreter.prototype.pluginCommand('PA_START',standPCBlinks);
 
 			}
 
 		}
+
+
+
 })()
