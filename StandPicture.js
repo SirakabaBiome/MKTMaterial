@@ -470,7 +470,6 @@ function mktHide(mktPictureID,x,pos,partIndex){
 		$gameScreen.movePicture(mktPictureID + 2,0,x,0,100,100,0,0,60);
 	}
 	var mktStundPictureErasePer = function(partIndex,pos,mktPictureID){
-		console.log( "消してる" );
 		$gameScreen.erasePicture(mktPictureID);
 		$gameScreen.erasePicture(mktPictureID + 1);
 		$gameScreen.erasePicture(mktPictureID + 2);
