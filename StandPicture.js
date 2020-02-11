@@ -514,6 +514,12 @@ function mktHide(mktPictureID,x,pos,partIndex){
 		if ( mktChange ) {
 			startX = x;
 			startOpa = 255;
+			if ( partLS > 0 ) {
+				$gameScreen.erasePicture(pictureID + 2);
+			}
+			if ( partBS > 0 ) {
+				$gameScreen.erasePicture(pictureID + 1);
+			}
 		} else {
 			switch ( paramLLR ) {
 				case 1:
