@@ -2,12 +2,11 @@
 //  StandPicture.js
 // ======================
 /*:ja
- * @plugindesc 立ち絵の表示を楽にします[v0.5.1]
+ * @plugindesc 立ち絵の表示を楽にします[v0.5.2]
  * @author 白樺まこと
  *
  * @help
  *　このプラグインは
- *  YEP_ScriptCallPluginCmd.js(Yanfly様) https://yanflyengineplugins.itch.io/free-starter-pack-essentials
  *  EasingPicture.js(くらむぼん様) https://krmbn0576.github.io/rpgmakermv/homepage.html
  *  PictureAnimation.js(トリアコンタン様) https://triacontane.blogspot.com/2015/12/blog-post_20.html
  *  が必要です
@@ -16,7 +15,8 @@
  *　https://diary.sirakababiome.com/2020/02/mvStand.html
  *
  * 更新履歴
- * 動きを選択できるようにした
+ * 2020/04/15-トリアコンタン様に改修してもらい競合を修正してもらいました。
+ * 2020/02/12-動きを選択できるようにした。
  *
  * 規約
  * 白樺まことの表記をわかりやすいどこかに残しておけば再配布・改変に制限はありません。商用利用も可能です。
@@ -25,6 +25,9 @@
  *
  * 連絡先
  * Twitter maou_2chica
+ *
+ * スペシャルサンクス
+ * トリアコンタン様
  *
  * @param FileNameAndCharacterName
  * @desc キャラクター名とピクチャ名を結びつけます
@@ -279,11 +282,14 @@
 	var textS = Number(parameters.textXS);
 	var mktease = [String(parameters.easing)];
 	var linear = ['linear'];
+	var interpreter;
 
 //プラグインコマンド
-  var _Game_Interpreter_prototype_pluginCommand = Game_Interpreter.prototype.pluginCommand;
+  var _Game_Interpreter_pluginCommand = Game_Interpreter.prototype.pluginCommand;
   Game_Interpreter.prototype.pluginCommand = function(command, args) {
-    _Game_Interpreter_prototype_pluginCommand.call(this, command, args);
+    _Game_Interpreter_pluginCommand.call(this, command, args);
+	  interpreter = this;
+
     if ( command === 'MKTSP' ) {
       switch (args[0]) {
 
@@ -463,7 +469,7 @@
 //立ち絵の消去
 
 function mktHide(mktPictureID,x,pos,partIndex){
-	Game_Interpreter.prototype.pluginCommand('easing',mktease);
+	_Game_Interpreter_pluginCommand.call(interpreter,'easing',mktease);
 	$gameScreen.movePicture(mktPictureID,0,x,0,100,100,0,0,60);
 	if ( partIndex == 'true' ) {
 		$gameScreen.movePicture(mktPictureID + 1,0,x,0,100,100,0,0,60);
@@ -498,7 +504,7 @@ function mktHide(mktPictureID,x,pos,partIndex){
 		mktSPCN = -1;
 		mktSPCCN = -1;
 	}
-	Game_Interpreter.prototype.pluginCommand('easing',linear);
+	_Game_Interpreter_pluginCommand.call(interpreter,'easing',linear);
 }
 
 //ピクチャの表示
@@ -550,7 +556,7 @@ function mktHide(mktPictureID,x,pos,partIndex){
 		if ( paramL != false ) {
 			if ( paratL > 0 ) {
     		var standPLip = [String(partLS),String(paramL),'H','0'];
-				Game_Interpreter.prototype.pluginCommand('PA_INIT',standPLip);
+				_Game_Interpreter_pluginCommand.call(interpreter,'PA_INIT',standPLip);
 	  		$gameScreen.showPicture(pictureID3, pictureName + '_' + indexL + '_Lip', 0, startX, y, 100,100,100,startOpa,startOpa);
 			} else {
 	  		$gameScreen.showPicture(pictureID3, pictureName + '_' + indexL + '_Lip', 0, startX, y, 100,100,100,startOpa,startOpa);
@@ -559,7 +565,7 @@ function mktHide(mktPictureID,x,pos,partIndex){
 		if ( paramB != false ) {
 			if ( paratB > 0) {
     		var standPBlink = [String(partBS),String(paramB),'横','0'];
-				Game_Interpreter.prototype.pluginCommand('PA_INIT',standPBlink);
+				_Game_Interpreter_pluginCommand.call(interpreter,'PA_INIT',standPBlink);
 	  		$gameScreen.showPicture(pictureID2, pictureName + '_' + index + '_Blink', 0, startX, y, 100,100,100,startOpa,startOpa);
 				if ( paramLLR == 1 ) {
 				partBlinkSetL = setInterval(mktLBlink,paramBSP);
@@ -587,24 +593,24 @@ function mktHide(mktPictureID,x,pos,partIndex){
 		} else {
 	  	$gameScreen.showPicture(pictureID, fileName + '_' + index, 0, startX, y, 100,100,100,startOpa,startOpa);
 		}
-    Game_Interpreter.prototype.pluginCommand('easing',mktease);
+    _Game_Interpreter_pluginCommand.call(interpreter,'easing',mktease);
     $gameScreen.movePicture(pictureID,0,x,y,100,100,255,0,60);
 		if ( partIndex == 'true' ) {
-	    Game_Interpreter.prototype.pluginCommand('easing',mktease);
+	    _Game_Interpreter_pluginCommand.call(interpreter,'easing',mktease);
 	    $gameScreen.movePicture(pictureID2,0,x,y,100,100,255,0,60);
 			if ( paramL != false ) {
-		    Game_Interpreter.prototype.pluginCommand('easing',mktease);
+		    _Game_Interpreter_pluginCommand.call(interpreter,'easing',mktease);
 		    $gameScreen.movePicture(pictureID3,0,x,y,100,100,255,0,60);
 			}
 		}
-	  Game_Interpreter.prototype.pluginCommand('easing',linear);
+	  _Game_Interpreter_pluginCommand.call(interpreter,'easing',linear);
   }
 
 //動きの設定
 	function mktMovePicture(pictureID,x,y,moveType,wait,count,ID){
 		switch ( moveType ) {
 			case 'Jump':
-			Game_Interpreter.prototype.pluginCommand('easing',mktease);
+			_Game_Interpreter_pluginCommand.call(interpreter,'easing',mktease);
 			var mktJumpC = 0;
 			var mktJumpP = setInterval(mktJump, wait);
 				function mktJump(){
@@ -632,11 +638,11 @@ function mktHide(mktPictureID,x,pos,partIndex){
 						}
 					}
 				}
-			  Game_Interpreter.prototype.pluginCommand('easing',linear);
+			  _Game_Interpreter_pluginCommand.call(interpreter,'easing',linear);
 				break;
 
 			case 'Shake':
-		  Game_Interpreter.prototype.pluginCommand('easing',mktease);
+		  _Game_Interpreter_pluginCommand.call(interpreter,'easing',mktease);
 			var mktShakeC = 0;
 			var mktShakeP = setInterval(mktShake, wait);
 				function mktShake(){
@@ -664,7 +670,7 @@ function mktHide(mktPictureID,x,pos,partIndex){
 						}
 					}
 				}
-			  Game_Interpreter.prototype.pluginCommand('easing',linear);
+			  _Game_Interpreter_pluginCommand.call(interpreter,'easing',linear);
 				break;
 
 				case 'Custom':
@@ -701,8 +707,8 @@ function mktHide(mktPictureID,x,pos,partIndex){
 							}
 						}
 					}
-				  Game_Interpreter.prototype.pluginCommand('easing',mktease);
-				  Game_Interpreter.prototype.pluginCommand('easing',linear);
+				  _Game_Interpreter_pluginCommand.call(interpreter,'easing',mktease);
+				  _Game_Interpreter_pluginCommand.call(interpreter,'easing',linear);
 					break;
 
 			}
@@ -831,12 +837,12 @@ function mktHide(mktPictureID,x,pos,partIndex){
 			var standPLLip = [String(mktLPID + 2),'1'];
 			var standPLLipEnd = setInterval(standLLipEnd,textS);
 			var endCountL = 0;
-			Game_Interpreter.prototype.pluginCommand('PA_START_LOOP',standPLLip);
+			_Game_Interpreter_pluginCommand.call(interpreter,'PA_START_LOOP',standPLLip);
 			function standLLipEnd(){
 				endCountL++;
 				if (endCountL => 1) {
 					var standPLLEnd = [String(mktLPID + 2)];
-					Game_Interpreter.prototype.pluginCommand('PA_STOP',standPLLEnd);
+					_Game_Interpreter_pluginCommand.call(interpreter,'PA_STOP',standPLLEnd);
 					clearInterval(standPLLipEnd);
 				}
 			}
@@ -845,12 +851,12 @@ function mktHide(mktPictureID,x,pos,partIndex){
 			var standPRLip = [String(mktRPID + 2),'1'];
 			var standPRLipEnd = setInterval(standRLipEnd,textS);
 			var endCountR = 0;
-			Game_Interpreter.prototype.pluginCommand('PA_START_LOOP',standPRLip);
+			_Game_Interpreter_pluginCommand.call(interpreter,'PA_START_LOOP',standPRLip);
 			function standRLipEnd(){
 				endCountR++;
 				if (endCountR => 1) {
 					var standPRLEnd = [String(mktRPID + 2)];
-					Game_Interpreter.prototype.pluginCommand('PA_STOP',standPRLEnd);
+					_Game_Interpreter_pluginCommand.call(interpreter,'PA_STOP',standPRLEnd);
 					clearInterval(standPRLipEnd);
 				}
 			}
@@ -859,12 +865,12 @@ function mktHide(mktPictureID,x,pos,partIndex){
 			var standPCLip = [String(mktCPID + 2),'1'];
 			var standPCLipEnd = setInterval(standCLipEnd,textS);
 			var endCountC = 0;
-			Game_Interpreter.prototype.pluginCommand('PA_START_LOOP',standPCLip);
+			_Game_Interpreter_pluginCommand.call(interpreter,'PA_START_LOOP',standPCLip);
 			function standCLipEnd(){
 				endCountC++;
 				if (endCountC => 1) {
 					var standPCLEnd = [String(mktCPID + 2)];
-					Game_Interpreter.prototype.pluginCommand('PA_STOP',standPCLEnd);
+					_Game_Interpreter_pluginCommand.call(interpreter,'PA_STOP',standPCLEnd);
 					clearInterval(standPCLipEnd);
 				}
 			}
@@ -877,7 +883,7 @@ function mktHide(mktPictureID,x,pos,partIndex){
 
 				var standPLBlinks = [String(mktLPID + 1),'2'];
 
-				Game_Interpreter.prototype.pluginCommand('PA_START',standPLBlinks);
+				_Game_Interpreter_pluginCommand.call(interpreter,'PA_START',standPLBlinks);
 
 			}
 		}
@@ -888,7 +894,7 @@ function mktHide(mktPictureID,x,pos,partIndex){
 
 	    	var standPRBlinks = [String(mktRPID + 1),'2'];
 
-				Game_Interpreter.prototype.pluginCommand('PA_START',standPRBlinks);
+				_Game_Interpreter_pluginCommand.call(interpreter,'PA_START',standPRBlinks);
 
 			}
 
@@ -900,7 +906,7 @@ function mktHide(mktPictureID,x,pos,partIndex){
 
 				var standPCBlinks = [String(mktCPID + 1),'2'];
 
-				Game_Interpreter.prototype.pluginCommand('PA_START',standPCBlinks);
+				_Game_Interpreter_pluginCommand.call(interpreter,'PA_START',standPCBlinks);
 
 			}
 
