@@ -2,7 +2,7 @@
 //  StandPicture.js
 // ======================
 /*:ja
- * @plugindesc 立ち絵の表示を楽にします[v0.5.3a]
+ * @plugindesc 立ち絵の表示を楽にします[v0.5.3b]
  * @author 白樺まこと
  *
  * @help
@@ -244,9 +244,9 @@
 
 	const pluginName = 'StandPicture';
 
-  var mktSPLN = false;
-  var mktSPRN = false;
-	var mktSPCN = false;
+  var mktSPLN = -1;
+  var mktSPRN = -1;
+	var mktSPCN = -1;
 	var mktSPLCN = -1;
 	var mktSPRCN = -1;
 	var mktSPCCN = -1;
@@ -307,11 +307,13 @@
       switch (args[0]) {
 
         case 'showL':
-				if ( mktSPLB == true ) {
+				if ( mktSPLB > 0 ) {
 					clearInterval(partBlinkSetL);
 				}
-				if ( args[5] == true ) {
-					mktSPLB == true
+				if ( args[5] > 1 ) {
+					mktSPLB = 1;
+				} else {
+					mktSPLB = -1;
 				}
 				costume = args[6];
 				if ( mktSPLN == args[1]) {
@@ -357,11 +359,13 @@
           break;
 
         case 'showC':
-				if ( mktSPCB == true ) {
-					clearInterval(partBlinkSetC);
+				if ( mktSPCB > 0 ) {
+					clearInterval(partBlinkSetL);
 				}
-				if ( args[5] == true ) {
-					mktSPCB == true
+				if ( args[5] > 1 ) {
+					mktSPCB = 1;
+				} else {
+					mktSPCB = -1;
 				}
 				costume = args[6];
 				if ( mktSPCN == args[1]) {
@@ -406,11 +410,13 @@
           break;
 
         case 'showR':
-				if ( mktSPRB == true ) {
-					clearInterval(partBlinkSetR);
+				if ( mktSPRB > 0 ) {
+					clearInterval(partBlinkSetL);
 				}
-				if ( args[5] == true ) {
-					mktSPRB == true
+				if ( args[5] > 1 ) {
+					mktSPRB = 1;
+				} else {
+					mktSPRB = -1;
 				}
 				costume = args[6];
 				if ( mktSPRN == args[1]) {
@@ -947,7 +953,7 @@ function mktHide(mktPictureID,x,pos,partIndex){
 			}
 		}
 
-		function mktLBlink() {
+		var mktLBlink = function(){
 			var randomBlinkL = Math.floor( Math.random() * paramBRL );
 
 			if (randomBlinkL == 0) {
@@ -958,7 +964,7 @@ function mktHide(mktPictureID,x,pos,partIndex){
 
 			}
 		}
-		function mktRBlink() {
+		var mktRBlink = function(){
 			var randomBlinkR = Math.floor( Math.random() * paramBRR );
 
 			if (randomBlinkR == 0) {
@@ -970,7 +976,7 @@ function mktHide(mktPictureID,x,pos,partIndex){
 			}
 
 		}
-		function mktCBlink() {
+		var mktCBlink = function(){
 			var randomBlinkC = Math.floor( Math.random() * paramBRC );
 
 			if (randomBlinkC == 0) {
