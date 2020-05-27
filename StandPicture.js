@@ -2,7 +2,7 @@
 //  StandPicture.js
 // ======================
 /*:ja
- * @plugindesc 立ち絵の表示を楽にします[v0.5.2]
+ * @plugindesc 立ち絵の表示を楽にします[v0.5.3]
  * @author 白樺まこと
  *
  * @help
@@ -15,6 +15,7 @@
  *　https://diary.sirakababiome.com/2020/02/mvStand.html
  *
  * 更新履歴
+ * 2020/05/27-キャラクターフォーカス時に動きがつく機能追加。瞬きの数が異常に増えるバグの修正。
  * 2020/04/15-トリアコンタン様に改修してもらい競合を修正してもらいました。
  * 2020/02/12-動きを選択できるようにした。
  *
@@ -149,6 +150,11 @@
  * @value easeInOutBounce
  *
  * @default easeOutBack
+ *
+ * @param focusMove
+ * @desc 明暗の他に動きをつけますか？
+ * @type boolean
+ * @default false
  */
 
  /*~struct~mktSPIDName:
@@ -238,12 +244,15 @@
 
 	const pluginName = 'StandPicture';
 
-  var mktSPLN = 0;
-  var mktSPRN = 0;
-	var mktSPCN = 0;
+  var mktSPLN = -1;
+  var mktSPRN = -1;
+	var mktSPCN = -1;
 	var mktSPLCN = -1;
 	var mktSPRCN = -1;
 	var mktSPCCN = -1;
+	var mktSPLB = -1;
+	var mktSPCB = -1;
+	var mktSPRB = -1;
 	var mktChange = 0;
   var parameters = PluginManager.parameters(pluginName);
   var paramKey = JSON.parse(parameters.FileNameAndCharacterName);
@@ -258,6 +267,7 @@
 	var mktCX = Number(parameters.CenterPictureX);
 	var stX = Number(parameters.StartX);
 	var autoEre = Number(parameters.AutoErease);
+	var mktMoveFocus = parameters.focusMove;
 	var partIndexL = 0;
 	var partIndexR = 0;
 	var partIndexC = 0;
@@ -281,6 +291,9 @@
 	var costume = 0;
 	var textS = Number(parameters.textXS);
 	var mktease = [String(parameters.easing)];
+	var mktYM = mktPY + 20;
+	var mktLXM = -100;
+	var mktRXM = mktRX + 100;
 	var linear = ['linear'];
 	var interpreter;
 
@@ -294,6 +307,14 @@
       switch (args[0]) {
 
         case 'showL':
+				if ( mktSPLB > 0 ) {
+					clearInterval(partBlinkSetL);
+				}
+				if ( args[5] > 1 ) {
+					mktSPLB = 1;
+				} else {
+					mktSPLB = -1;
+				}
 				costume = args[6];
 				if ( mktSPLN == args[1]) {
 					mktChange = true;
@@ -334,10 +355,18 @@
         }
 				paramLLR = 1;
 				mktSPLN = args[1];
-					mktStundPictureShow(0,mktPY,args[1],args[2],args[3],mktLPID,args[4],args[5],partIndexL);
+				mktStundPictureShow(0,mktPY,args[1],args[2],args[3],mktLPID,args[4],args[5],partIndexL);
           break;
 
         case 'showC':
+				if ( mktSPCB > 0 ) {
+					clearInterval(partBlinkSetL);
+				}
+				if ( args[5] > 1 ) {
+					mktSPCB = 1;
+				} else {
+					mktSPCB = -1;
+				}
 				costume = args[6];
 				if ( mktSPCN == args[1]) {
 					mktChange = true;
@@ -377,10 +406,18 @@
         }
 				mktSPCN = args[1];
 				paramLLR = 3;
-					mktStundPictureShow(mktCX,mktPY,args[1],args[2],args[3],mktCPID,args[4],args[5],partIndexC);
+				mktStundPictureShow(mktCX,mktPY,args[1],args[2],args[3],mktCPID,args[4],args[5],partIndexC);
           break;
 
         case 'showR':
+				if ( mktSPRB > 0 ) {
+					clearInterval(partBlinkSetL);
+				}
+				if ( args[5] > 1 ) {
+					mktSPRB = 1;
+				} else {
+					mktSPRB = -1;
+				}
 				costume = args[6];
 				if ( mktSPRN == args[1]) {
 					mktChange = true;
@@ -493,16 +530,16 @@ function mktHide(mktPictureID,x,pos,partIndex){
 	}
 	setTimeout(mktStundPictureErasePer, 500,partIndex,pos,mktPictureID);
 	if (pos == "L") {
-		mktSPLN = -1;
-		mktSPLCN = -1;
+		mktSPLN = false;
+		mktSPLCN = false;
 	}
 	if ( pos == "R") {
-		mktSPRN = -1;
-		mktSPRCN = -1;
+		mktSPRN = false;
+		mktSPRCN = false;
 	}
 	if ( pos == "C") {
-		mktSPCN = -1;
-		mktSPCCN = -1;
+		mktSPCN = false;
+		mktSPCCN = false;
 	}
 	_Game_Interpreter_pluginCommand.call(interpreter,'easing',linear);
 }
@@ -557,16 +594,16 @@ function mktHide(mktPictureID,x,pos,partIndex){
 			if ( paratL > 0 ) {
     		var standPLip = [String(partLS),String(paramL),'H','0'];
 				_Game_Interpreter_pluginCommand.call(interpreter,'PA_INIT',standPLip);
-	  		$gameScreen.showPicture(pictureID3, pictureName + '_' + indexL + '_Lip', 0, startX, y, 100,100,100,startOpa,startOpa);
+	  		$gameScreen.showPicture(pictureID3, pictureName + '_' + indexL + '_Lip', 0, startX, y, 100,100,100,startOpa,0);
 			} else {
-	  		$gameScreen.showPicture(pictureID3, pictureName + '_' + indexL + '_Lip', 0, startX, y, 100,100,100,startOpa,startOpa);
+	  		$gameScreen.showPicture(pictureID3, pictureName + '_' + indexL + '_Lip', 0, startX, y, 100,100,100,startOpa,0);
 			}
 		}
 		if ( paramB != false ) {
 			if ( paratB > 0) {
     		var standPBlink = [String(partBS),String(paramB),'横','0'];
 				_Game_Interpreter_pluginCommand.call(interpreter,'PA_INIT',standPBlink);
-	  		$gameScreen.showPicture(pictureID2, pictureName + '_' + index + '_Blink', 0, startX, y, 100,100,100,startOpa,startOpa);
+	  		$gameScreen.showPicture(pictureID2, pictureName + '_' + index + '_Blink', 0, startX, y, 100,100,100,startOpa,0);
 				if ( paramLLR == 1 ) {
 				partBlinkSetL = setInterval(mktLBlink,paramBSP);
 			} else if ( paramLLR == 2 ) {
@@ -582,16 +619,16 @@ function mktHide(mktPictureID,x,pos,partIndex){
 				} else if ( paramLLR == 3 ) {
 					clearInterval(partBlinkSetC);
 				}
-	  		$gameScreen.showPicture(pictureID2, pictureName + '_' + index + '_Blink', 0, startX, y, 100,100,100,startOpa,startOpa);
+	  		$gameScreen.showPicture(pictureID2, pictureName + '_' + index + '_Blink', 0, startX, y, 100,100,100,startOpa,0);
 			}
 		}
 		if ( partIndex == 'true' ) {
-    	$gameScreen.showPicture(pictureID, fileName, 0, startX, y, 100,100,100,startOpa,startOpa);
+    	$gameScreen.showPicture(pictureID, fileName, 0, startX, y, 100,100,100,startOpa,0);
 			if ( paramB == 0 ) {
-	  	$gameScreen.showPicture(pictureID2, pictureName + '_' + index, 0, startX, y, 100,100,100,startOpa,startOpa);
+	  	$gameScreen.showPicture(pictureID2, pictureName + '_' + index, 0, startX, y, 100,100,100,startOpa,0);
 			}
 		} else {
-	  	$gameScreen.showPicture(pictureID, fileName + '_' + index, 0, startX, y, 100,100,100,startOpa,startOpa);
+	  	$gameScreen.showPicture(pictureID, fileName + '_' + index, 0, startX, y, 100,100,100,startOpa,0);
 		}
     _Game_Interpreter_pluginCommand.call(interpreter,'easing',mktease);
     $gameScreen.movePicture(pictureID,0,x,y,100,100,255,0,60);
@@ -801,33 +838,73 @@ function mktHide(mktPictureID,x,pos,partIndex){
 		}
 
 		function mktSPLFocus() {
+				if ( mktMoveFocus == "true" ) {
+		  		_Game_Interpreter_pluginCommand.call(interpreter,'easing',mktease);
+					$gameScreen.movePicture(mktLPID,0,0,mktPY,100,100,255,0,30);
+					$gameScreen.movePicture(mktLPID + 1,0,0,mktPY,100,100,255,0,30);
+					$gameScreen.movePicture(mktLPID + 2,0,0,mktPY,100,100,255,0,30);
+				  _Game_Interpreter_pluginCommand.call(interpreter,'easing',linear);
+				}
 				$gameScreen.tintPicture(mktLPID, [0,0,0,0], 30);
 				$gameScreen.tintPicture(mktLPID + 1, [0,0,0,0], 30);
 				$gameScreen.tintPicture(mktLPID + 2, [0,0,0,0], 30);
 		}
 
 		function mktSPRFocus() {
+				if ( mktMoveFocus == "true" ) {
+		  		_Game_Interpreter_pluginCommand.call(interpreter,'easing',mktease);
+					$gameScreen.movePicture(mktRPID,0,mktRX,mktPY,100,100,255,0,30);
+					$gameScreen.movePicture(mktRPID + 1,0,mktRX,mktPY,100,100,255,0,30);
+					$gameScreen.movePicture(mktRPID + 2,0,mktRX,mktPY,100,100,255,0,30);
+				  _Game_Interpreter_pluginCommand.call(interpreter,'easing',linear);
+				}
 				$gameScreen.tintPicture(mktRPID, [0,0,0,0], 30);
 				$gameScreen.tintPicture(mktRPID + 1, [0,0,0,0], 30);
 				$gameScreen.tintPicture(mktRPID + 2, [0,0,0,0], 30);
 		}
 		function mktSPCFocus() {
+	  		_Game_Interpreter_pluginCommand.call(interpreter,'easing',mktease);
+				$gameScreen.movePicture(mktCPID,0,mktCX,mktPY,100,100,255,0,30);
+				$gameScreen.movePicture(mktCPID + 1,0,mktCX,mktPY,100,100,255,0,30);
+				$gameScreen.movePicture(mktCPID + 2,0,mktCX,mktPY,100,100,255,0,30);
+			  _Game_Interpreter_pluginCommand.call(interpreter,'easing',linear);
 				$gameScreen.tintPicture(mktCPID, [0,0,0,0], 30);
 				$gameScreen.tintPicture(mktCPID + 1, [0,0,0,0], 30);
 				$gameScreen.tintPicture(mktCPID + 2, [0,0,0,0], 30);
 		}
 
 		function mktLDark() {
+			if ( mktMoveFocus == "true" ) {
+		  	_Game_Interpreter_pluginCommand.call(interpreter,'easing',mktease);
+				$gameScreen.movePicture(mktLPID,0,mktLXM,mktYM,100,100,255,0,30);
+				$gameScreen.movePicture(mktLPID + 1,0,mktLXM,mktYM,100,100,255,0,30);
+				$gameScreen.movePicture(mktLPID + 2,0,mktLXM,mktYM,100,100,255,0,30);
+				_Game_Interpreter_pluginCommand.call(interpreter,'easing',linear);
+			}
 			$gameScreen.tintPicture(mktLPID, [-128,-128,-128,0], 30);
 			$gameScreen.tintPicture(mktLPID + 1, [-128,-128,-128,0], 30);
 			$gameScreen.tintPicture(mktLPID + 2, [-128,-128,-128,0], 30);
 		}
 		function mktRDark() {
+			if ( mktMoveFocus == "true" ) {
+		  	_Game_Interpreter_pluginCommand.call(interpreter,'easing',mktease);
+				$gameScreen.movePicture(mktRPID,0,mktRXM,mktYM,100,100,255,0,30);
+				$gameScreen.movePicture(mktRPID + 1,0,mktRXM,mktYM,100,100,255,0,30);
+				$gameScreen.movePicture(mktRPID + 2,0,mktRXM,mktYM,100,100,255,0,30);
+				_Game_Interpreter_pluginCommand.call(interpreter,'easing',linear);
+			}
 			$gameScreen.tintPicture(mktRPID, [-128,-128,-128,0], 30);
 			$gameScreen.tintPicture(mktRPID + 1, [-128,-128,-128,0], 30);
 			$gameScreen.tintPicture(mktRPID + 2, [-128,-128,-128,0], 30);
 		}
 		function mktCDark() {
+			if ( mktMoveFocus == "true" ) {
+		  	_Game_Interpreter_pluginCommand.call(interpreter,'easing',mktease);
+				$gameScreen.movePicture(mktCPID,0,mktCX,mktYM,100,100,255,0,30);
+				$gameScreen.movePicture(mktCPID + 1,0,mktCX,mktYM,100,100,255,0,30);
+				$gameScreen.movePicture(mktCPID + 2,0,mktCX,mktYM,100,100,255,0,30);
+				_Game_Interpreter_pluginCommand.call(interpreter,'easing',linear);
+			}
 			$gameScreen.tintPicture(mktCPID, [-128,-128,-128,0], 30);
 			$gameScreen.tintPicture(mktCPID + 1, [-128,-128,-128,0], 30);
 			$gameScreen.tintPicture(mktCPID + 2, [-128,-128,-128,0], 30);
@@ -876,7 +953,7 @@ function mktHide(mktPictureID,x,pos,partIndex){
 			}
 		}
 
-		function mktLBlink() {
+		var mktLBlink = function(){
 			var randomBlinkL = Math.floor( Math.random() * paramBRL );
 
 			if (randomBlinkL == 0) {
@@ -887,7 +964,7 @@ function mktHide(mktPictureID,x,pos,partIndex){
 
 			}
 		}
-		function mktRBlink() {
+		var mktRBlink = function(){
 			var randomBlinkR = Math.floor( Math.random() * paramBRR );
 
 			if (randomBlinkR == 0) {
@@ -899,7 +976,7 @@ function mktHide(mktPictureID,x,pos,partIndex){
 			}
 
 		}
-		function mktCBlink() {
+		var mktCBlink = function(){
 			var randomBlinkC = Math.floor( Math.random() * paramBRC );
 
 			if (randomBlinkC == 0) {
