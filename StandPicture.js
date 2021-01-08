@@ -2,7 +2,7 @@
 //  StandPicture.js
 // ======================
 /*:ja
- * @plugindesc 立ち絵の表示を楽にします[v0.5.3]
+ * @plugindesc 立ち絵の表示を楽にします[v0.5.4]
  * @author 白樺まこと
  *
  * @help
@@ -360,7 +360,7 @@
 
         case 'showC':
 				if ( mktSPCB > 0 ) {
-					clearInterval(partBlinkSetL);
+					clearInterval(partBlinkSetC);
 				}
 				if ( args[5] > 1 ) {
 					mktSPCB = 1;
@@ -411,7 +411,7 @@
 
         case 'showR':
 				if ( mktSPRB > 0 ) {
-					clearInterval(partBlinkSetL);
+					clearInterval(partBlinkSetR);
 				}
 				if ( args[5] > 1 ) {
 					mktSPRB = 1;
