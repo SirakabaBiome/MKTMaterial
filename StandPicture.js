@@ -37,6 +37,7 @@
  * @param CustomMove
  * @desc カスタムで動かします
  * @type struct<CustomMove>[]
+ * @default []
  *
  * @param LeftPictureID
  * @desc 左の立ち絵を表示するIDです
